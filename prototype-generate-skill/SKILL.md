@@ -1,9 +1,9 @@
 ---
-name: chatgpt-image-to-editable-figma
+name: prototype-generate-skill
 description: Use when a user wants product requirements, PRDs, sketches, wireframes, screenshots, or written flows turned into a confirmed prototype screen plan, per-screen element inventory, and one separate 720×1563 prototype/reference image per approved page or state. This skill stops before editable Figma layer reconstruction.
 ---
 
-# ChatGPT Image To Prototype Screens
+# Prototype Generate Skill
 
 ## Purpose
 
