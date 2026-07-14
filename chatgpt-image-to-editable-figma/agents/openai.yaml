@@ -1,0 +1,4 @@
+interface:
+  display_name: "ChatGPT Image to Prototype Screens"
+  short_description: "Plan prototype screens, list required elements, then generate approved 720×1563 images"
+  default_prompt: "Use $chatgpt-image-to-editable-figma to analyze my requirements, propose the screen manifest, list each page's required elements, define the visual foundation, wait for my approval, then generate each approved screen separately at exactly 720 × 1563 px. Do not rebuild editable Figma layers in this skill."
