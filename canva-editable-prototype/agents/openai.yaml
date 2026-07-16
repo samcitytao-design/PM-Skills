@@ -1,0 +1,4 @@
+interface:
+  display_name: "Canva Editable Prototype"
+  short_description: "Rebuild UI prototypes as editable Canva layers"
+  default_prompt: "Use $canva-editable-prototype to rebuild these prototype images as editable Canva designs."
