@@ -65,7 +65,7 @@ If source files have not actually been inspected, do not publish project-specifi
 
 - success measurement and key failure reasons
 - configuration, moderation, review, audit, or manual operations when evidenced
-- Given/When/Then acceptance for each requirement and critical path
+- acceptance coverage at the user-approved detail level; use Given/When/Then only when approved or when precise transitions require it
 
 ## Output Classification
 

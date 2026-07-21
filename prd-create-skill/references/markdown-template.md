@@ -1,6 +1,32 @@
-# Portable Markdown Template
+# Portable Markdown Profiles
 
-## Document Order
+Select and preview one profile before formal drafting. Do not silently choose a document structure.
+
+## Profile Selection
+
+| Profile | Use when | Primary unit |
+|---|---|---|
+| Review table | Test points, AB experiments, positions, styles, or several variants of one requirement | One table per test point, one row per variant |
+| Full spec | Independent pages, multi-step flows, states, data, dependencies, or recovery dominate | One section per page/state plus flow detail |
+
+Use the review-table profile by default when both profiles are plausible and the user is preparing a UI/product review. Read [review-table-template.md](review-table-template.md) for its grouping and logic rules.
+
+## Review-Table Document Order
+
+Preview this outline and let the user add, remove, rename, reorder, or shorten sections:
+
+1. title and confirmed metadata
+2. background and goal
+3. scope and non-goals as applicable
+4. input evidence/page map when useful to reviewers
+5. page requirements organized by test point
+6. central configuration parameter table when configuration exists
+7. experiment plan when testing exists
+8. events and success/guardrail measurement when requested
+9. conditional modules such as push, permissions, data, dependencies, or recovery only when evidenced
+10. confirmed decision record when useful for maintenance
+
+## Full-Spec Document Order
 
 1. title and metadata
 2. background, goal, users, scope, non-goals, success
@@ -15,9 +41,7 @@
 
 Omit inapplicable sections instead of filling them with invented content.
 
-## Page Layout
-
-Use a compact visual summary followed by editable detail:
+## Full-Spec Page Layout
 
 ```markdown
 ## 页面需求
@@ -28,11 +52,7 @@ Use a compact visual summary followed by editable detail:
 
 | Prototype | Requirement summary |
 |---|---|
-| ![P01 prototype](assets/P01.png) | **Purpose**<br>Confirmed purpose.<br><br>**Key elements**<br>1. Element A<br>2. Element B<br><br>**Interactions**<br>1. Action and confirmed result |
-
-#### Entry And Preconditions
-
-- Confirmed entry behavior.
+| ![P01 prototype](assets/P01.png) | **Purpose**<br>Confirmed purpose.<br><br>**Key elements**<br>1. Element A<br><br>**Interactions**<br>1. Action → confirmed result. |
 
 #### States And Recovery
 
@@ -42,33 +62,23 @@ Use a compact visual summary followed by editable detail:
 
 #### Acceptance Criteria
 
-- Given ..., when ..., then ...
+- Concise acceptance in the approved style.
 ```
-
-Keep the right table cell concise. Place long rules below the table so future edits remain comfortable.
 
 ## Flow Layout
 
-Use Mermaid for meaningful multi-step or branching flows and follow it with concise text:
-
-```mermaid
-flowchart TD
-    A[Confirmed start] --> B{Confirmed decision}
-    B -->|Condition A| C[Confirmed result A]
-    B -->|Condition B| D[Confirmed result B]
-```
-
-Do not invent a branch solely to make a diagram look complete.
+Use Mermaid only for meaningful multi-step or branching flows and follow it with concise text steps. Do not invent a branch to make a diagram look complete.
 
 ## Portability
 
-- use relative image paths
+- use the confirmed image mode: copied relative assets for a portable package, or stable HTTPS images for an online-review document
+- never use absolute local filesystem paths
 - use standard headings, lists, blockquotes, tables, images, and fenced Mermaid
 - avoid external CSS, scripts, editor directives, or style-dependent meaning
 - avoid nested tables and long prose inside table cells
-- use `<br>` only inside the compact summary table
+- use `<br>` only inside compact summary tables
 - include text steps when Mermaid support is uncertain
 
 ## Final Sections
 
-Use `已确认决策记录`, never `待确认问题`. Use `后续优化` only for explicitly accepted non-blocking ideas and label them outside current acceptance.
+Use `已确认决策记录`, never `待确认问题`. Use `后续优化` only for explicitly accepted non-blocking ideas outside current acceptance.

@@ -30,11 +30,12 @@ Before scanning product logic:
 
 1. inventory files
 2. identify duplicates, variants, fragments, overlays, and unreadable assets
-3. propose stable IDs and names
-4. create an evidence/inference split
-5. obtain explicit page-map approval
+3. propose stable source IDs and names
+4. group related images into test points and variants when applicable
+5. create an evidence/inference split
+6. include the proposed map in the consolidated pre-draft confirmation pack
 
-Read [prototype-intake.md](prototype-intake.md) for the required table and confirmation gate.
+Read [prototype-intake.md](prototype-intake.md) for the required inventory and grouping rules. The map and document-format preview may be approved together in one explicit reply.
 
 ## Mixed Inputs
 

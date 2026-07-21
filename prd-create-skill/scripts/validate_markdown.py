@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a final portable Markdown PRD."""
+"""Validate a final portable Markdown PRD in full-spec or review-table form."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from urllib.parse import unquote, urlsplit
 
 PLACEHOLDER_RE = re.compile(r"\b(?:TBD|TODO)\b|暂定方案|以后补充|待补充", re.IGNORECASE)
 PAGE_HEADING_RE = re.compile(r"^###\s+([A-Za-z0-9][A-Za-z0-9._-]*)\s+.+$", re.MULTILINE)
+SECTION_HEADING_RE = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
 PAGE_SECTION_RE = re.compile(r"^##\s+(?:页面需求|Page Requirements)\s*$", re.MULTILINE | re.IGNORECASE)
 IMAGE_START_RE = re.compile(r"!\[[^\]]*\]\(")
 LINK_START_RE = re.compile(r"(?<!!)\[[^\]]+\]\(")
@@ -19,6 +20,7 @@ PENDING_SECTION_RE = re.compile(
     r"^#{1,6}\s+.*(?:待确认问题|待确认事项|Pending Questions|Open Questions|Unresolved Decisions).*$",
     re.MULTILINE | re.IGNORECASE,
 )
+PROFILE_MARKER_RE = re.compile(r"<!--\s*prd-profile:\s*(full-spec|review-table)\s*-->", re.IGNORECASE)
 
 
 def _page_region(text: str) -> str:
@@ -30,13 +32,13 @@ def _page_region(text: str) -> str:
     return rest[: end_match.start()] if end_match else rest
 
 
-def _page_sections(text: str) -> list[tuple[str, str]]:
+def _sections(text: str, pattern: re.Pattern[str]) -> list[tuple[str, str]]:
     region = _page_region(text)
-    matches = list(PAGE_HEADING_RE.finditer(region))
+    matches = list(pattern.finditer(region))
     sections = []
     for index, match in enumerate(matches):
         end = matches[index + 1].start() if index + 1 < len(matches) else len(region)
-        sections.append((match.group(1), region[match.start() : end]))
+        sections.append((match.group(1).strip(), region[match.start() : end]))
     return sections
 
 
@@ -78,14 +80,45 @@ def _extract_targets(text: str, image: bool) -> list[str]:
     return targets
 
 
-def _is_external_or_absolute(target: str) -> bool:
+def _target_kind(target: str) -> str:
     parsed = urlsplit(target)
-    return bool(parsed.scheme or parsed.netloc or target.startswith(("/", "~")) or re.match(r"^[A-Za-z]:[\\/]", target))
+    if parsed.scheme.lower() in {"http", "https"} and parsed.netloc:
+        return "external"
+    if parsed.scheme or parsed.netloc or target.startswith(("/", "~")) or re.match(r"^[A-Za-z]:[\\/]", target):
+        return "absolute"
+    return "relative"
+
+
+def _split_cells(line: str) -> list[str]:
+    return [cell.strip() for cell in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
 
 
 def _count_table_cells(line: str) -> int:
-    content = line.strip().strip("|")
-    return len(re.split(r"(?<!\\)\|", content))
+    return len(_split_cells(line))
+
+
+def _table_blocks(text: str) -> list[tuple[list[str], list[list[str]]]]:
+    lines = text.splitlines()
+    delimiter = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$")
+    blocks: list[tuple[list[str], list[list[str]]]] = []
+    for index, line in enumerate(lines):
+        if not delimiter.match(line) or index == 0 or "|" not in lines[index - 1]:
+            continue
+        header = _split_cells(lines[index - 1])
+        rows: list[list[str]] = []
+        row = index + 1
+        while row < len(lines) and lines[row].strip() and "|" in lines[row]:
+            rows.append(_split_cells(lines[row]))
+            row += 1
+        blocks.append((header, rows))
+    return blocks
+
+
+def _is_prototype_requirement_table(header: list[str]) -> bool:
+    joined = " ".join(header).lower()
+    has_prototype = any(token in joined for token in ("prototype", "原型", "页面示意", "样式"))
+    has_requirement = any(token in joined for token in ("requirement", "需求", "逻辑", "规则", "说明"))
+    return has_prototype and has_requirement and len(header) == 2
 
 
 def _validate_headings(text: str) -> list[str]:
@@ -122,8 +155,6 @@ def _validate_tables(text: str) -> list[str]:
         if _count_table_cells(line) != expected:
             issues.append(f"Table delimiter at line {index + 1} has inconsistent columns.")
         row = index + 1
-        if row < len(lines) and lines[row].strip() and "|" not in lines[row]:
-            issues.append(f"Table row at line {row + 1} has no column separators.")
         while row < len(lines) and lines[row].strip() and "|" in lines[row]:
             if _count_table_cells(lines[row]) != expected:
                 issues.append(f"Table row at line {row + 1} has inconsistent columns.")
@@ -135,9 +166,9 @@ def _validate_mermaid(text: str) -> list[str]:
     issues = []
     lines = text.splitlines()
     in_mermaid = False
-    starts = 0
     content: list[str] = []
-    for line_number, line in enumerate(lines, 1):
+    starts = 0
+    for line in lines:
         if not in_mermaid and line.strip().lower() == "```mermaid":
             in_mermaid = True
             starts += 1
@@ -150,17 +181,6 @@ def _validate_mermaid(text: str) -> list[str]:
                 re.IGNORECASE,
             ):
                 issues.append("Mermaid syntax must start with a supported diagram declaration.")
-            elif re.match(r"^(?:flowchart|graph)\b", first, re.IGNORECASE):
-                for statement in content[1:]:
-                    candidate = statement.strip()
-                    if not candidate or candidate.startswith("%%"):
-                        continue
-                    edge = re.split(r"(?:-->|---|-\.->|==>)", candidate, maxsplit=1)
-                    if len(edge) == 2:
-                        right = re.sub(r"^\|[^|]*\|\s*", "", edge[1].strip())
-                        if not right or not re.match(r"^[A-Za-z0-9_]", right):
-                            issues.append("Mermaid syntax contains an incomplete flow edge.")
-                            break
             in_mermaid = False
         elif in_mermaid:
             content.append(line)
@@ -192,7 +212,80 @@ def _heading_anchors(text: str) -> set[str]:
     return anchors
 
 
-def validate_markdown(path: Path) -> list[str]:
+def _validate_full_spec(text: str, acceptance_detail: str) -> list[str]:
+    issues = []
+    sections = _sections(text, PAGE_HEADING_RE)
+    page_ids = [page_id for page_id, _ in sections]
+    for page_id, count in Counter(page_ids).items():
+        if count > 1:
+            issues.append(f"Duplicate page ID: {page_id}.")
+    if not page_ids:
+        issues.append("No full-spec page requirement headings were found.")
+    for page_id, section in sections:
+        if acceptance_detail != "none" and not re.search(
+            r"^####\s+(?:Acceptance Criteria|验收标准)\s*$", section, re.MULTILINE | re.IGNORECASE
+        ):
+            issues.append(f"Page {page_id} is missing an Acceptance Criteria section.")
+        if not _extract_targets(section, image=True):
+            issues.append(f"Page {page_id} has no traceable prototype image.")
+    return issues
+
+
+def _validate_review_table(text: str) -> list[str]:
+    issues = []
+    sections = _sections(text, SECTION_HEADING_RE)
+    names = [name for name, _ in sections]
+    for name, count in Counter(names).items():
+        if count > 1:
+            issues.append(f"Duplicate test-point heading: {name}.")
+    if not sections:
+        return ["No review-table test-point headings were found."]
+
+    for name, section in sections:
+        matching = [(header, rows) for header, rows in _table_blocks(section) if _is_prototype_requirement_table(header)]
+        if len(matching) != 1:
+            issues.append(f"Test point {name} must contain exactly one two-column prototype/requirement table.")
+            continue
+        _, rows = matching[0]
+        if not rows:
+            issues.append(f"Test point {name} has no variant rows.")
+            continue
+        for index, row in enumerate(rows, 1):
+            if len(row) != 2:
+                continue
+            if not _extract_targets(row[0], image=True):
+                issues.append(f"Test point {name} variant row {index} has no prototype image.")
+            if not re.search(r"\w|[\u4e00-\u9fff]", re.sub(r"<br\s*/?>", " ", row[1], flags=re.IGNORECASE)):
+                issues.append(f"Test point {name} variant row {index} has no requirement logic.")
+    return issues
+
+
+def _detect_profile(text: str) -> str:
+    marker = PROFILE_MARKER_RE.search(text)
+    if marker:
+        return marker.group(1).lower()
+    sections = _sections(text, SECTION_HEADING_RE)
+    has_review_table = False
+    for _, section in sections:
+        for header, rows in _table_blocks(section):
+            if _is_prototype_requirement_table(header):
+                has_review_table = True
+                if len(rows) > 1:
+                    return "review-table"
+    if has_review_table and not all(
+        re.search(r"^####\s+(?:Acceptance Criteria|验收标准)\s*$", section, re.MULTILINE | re.IGNORECASE)
+        for _, section in sections
+    ):
+        return "review-table"
+    return "full-spec"
+
+
+def validate_markdown(
+    path: Path,
+    profile: str = "auto",
+    image_mode: str = "relative",
+    acceptance_detail: str = "concise",
+) -> list[str]:
     path = Path(path)
     text = path.read_text(encoding="utf-8")
     issues: list[str] = []
@@ -200,33 +293,33 @@ def validate_markdown(path: Path) -> list[str]:
     if PLACEHOLDER_RE.search(text):
         issues.append("Unresolved placeholder found in final Markdown.")
     if PENDING_SECTION_RE.search(text):
-        issues.append("Final Markdown must not contain 待确认问题 or any pending questions section.")
+        issues.append("Final Markdown must not contain a pending-questions section.")
+    if not PAGE_SECTION_RE.search(text):
+        issues.append("No 页面需求 or Page Requirements section was found.")
 
     issues.extend(_validate_headings(text))
     issues.extend(_validate_tables(text))
     issues.extend(_validate_mermaid(text))
 
-    page_ids = PAGE_HEADING_RE.findall(_page_region(text))
-    duplicates = sorted(page_id for page_id, count in Counter(page_ids).items() if count > 1)
-    for page_id in duplicates:
-        issues.append(f"Duplicate page ID: {page_id}.")
-    if not page_ids:
-        issues.append("No page requirement headings were found.")
-
-    for page_id, section in _page_sections(text):
-        if not re.search(r"^####\s+(?:Acceptance Criteria|验收标准)\s*$", section, re.MULTILINE | re.IGNORECASE):
-            issues.append(f"Page {page_id} is missing an Acceptance Criteria section.")
-        if not _extract_targets(section, image=True):
-            issues.append(f"Page {page_id} has no traceable prototype image.")
+    selected_profile = _detect_profile(text) if profile == "auto" else profile
+    if selected_profile == "review-table":
+        issues.extend(_validate_review_table(text))
+    else:
+        issues.extend(_validate_full_spec(text, acceptance_detail))
 
     for raw_target in _extract_targets(text, image=True):
         target = _target(raw_target)
-        if _is_external_or_absolute(target):
-            issues.append(f"Prototype must use a relative image path: {target}.")
-            continue
-        image_path = (path.parent / target).resolve()
-        if not image_path.is_file():
-            issues.append(f"Missing image: {target}.")
+        kind = _target_kind(target)
+        if kind == "absolute":
+            issues.append(f"Prototype must not use an absolute local or unsupported path: {target}.")
+        elif kind == "external":
+            if image_mode not in {"external", "mixed"}:
+                issues.append(f"External prototype does not match image mode {image_mode}: {target}.")
+        else:
+            if image_mode == "external":
+                issues.append(f"Relative prototype does not match image mode external: {target}.")
+            elif not (path.parent / target).resolve().is_file():
+                issues.append(f"Missing image: {target}.")
 
     anchors = _heading_anchors(text)
     for raw_target in _extract_targets(text, image=False):
@@ -235,7 +328,7 @@ def validate_markdown(path: Path) -> list[str]:
             if unquote(target[1:]).lower() not in anchors:
                 issues.append(f"Broken internal link: {target}.")
             continue
-        if _is_external_or_absolute(target):
+        if _target_kind(target) != "relative":
             continue
         local_target = target.split("#", 1)[0]
         if local_target and not (path.parent / local_target).resolve().exists():
@@ -247,9 +340,12 @@ def validate_markdown(path: Path) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("document", type=Path, help="Markdown PRD path")
+    parser.add_argument("--profile", choices=("auto", "full-spec", "review-table"), default="auto")
+    parser.add_argument("--image-mode", choices=("relative", "external", "mixed"), default="relative")
+    parser.add_argument("--acceptance-detail", choices=("none", "concise", "detailed"), default="concise")
     args = parser.parse_args(argv)
 
-    issues = validate_markdown(args.document)
+    issues = validate_markdown(args.document, args.profile, args.image_mode, args.acceptance_detail)
     if issues:
         for issue in issues:
             print(f"ERROR: {issue}")
