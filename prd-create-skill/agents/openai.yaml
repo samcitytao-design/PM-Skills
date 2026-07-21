@@ -1,4 +1,4 @@
 interface:
   display_name: "PRD Create Skill"
-  short_description: "从原型图扫描、确认并生成通用 Markdown PRD"
-  default_prompt: "Use $prd-create-skill to scan these prototypes, confirm blocking decisions, and create a portable Markdown PRD."
+  short_description: "确认需求与评审模板后生成可控质量的 Markdown PRD"
+  default_prompt: "Use $prd-create-skill to scan these prototypes, batch all pre-draft decisions, preview the proposed PRD template, and generate the confirmed Markdown PRD only after approval."
