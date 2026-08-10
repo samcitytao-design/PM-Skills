@@ -8,7 +8,7 @@
 | Mobile web | Preserve browser-safe content bounds and distinguish page UI from browser chrome. |
 | Tablet | Preserve orientation and source ratio; do not normalize to a phone canvas. |
 | Desktop | Preserve source viewport and scrolling model; use responsive behavior only beyond it. |
-| Partial UI | Rebuild the visible region; infer surrounding viewport only when needed and label the assumption. |
+| Partial UI | Use the crop's original pixel dimensions as the default web viewport and Figma frame; do not invent off-crop UI. Infer a full-device viewport only when the user requests a complete screen or surrounding context materially affects the deliverable. |
 | Multi-screen image | Separate each complete screen/state, assign stable IDs, and implement their transitions. |
 
 Do not normalize complete screenshots to a different standard width unless the user explicitly requests it.
@@ -51,4 +51,4 @@ Never use:
 
 ## Viewport and Responsiveness
 
-Match the source pixel viewport for primary validation. Prevent browser default margins and accidental scale changes. Keep fixed mobile shells centered only when the surrounding desktop preview requires it; the captured root must retain the source dimensions. Add graceful behavior at nearby widths without changing the source-view composition.
+Match the source pixel viewport for primary validation. For a partial crop, use the crop dimensions unless the user explicitly requests a complete device screen or the missing bounds materially change the output. Prevent browser default margins and accidental scale changes. Keep fixed mobile shells centered only when the surrounding desktop preview requires it; the captured root must retain the source dimensions. Add graceful behavior at nearby widths without changing the source-view composition.

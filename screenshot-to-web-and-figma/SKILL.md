@@ -19,6 +19,8 @@ Reconstruct supplied UI images as real interactive DOM, publish the verified pag
 
 If a required capability is unavailable, finish all independent stages, preserve their artifacts, and report the exact capability or authorization needed to resume.
 
+Treat source inspection as read-only intake, not as a project mutation. If a new Sites project is required, make initialization the first project-changing action after intake. Treat an explicit request for a public link as deployment approval; ask again only when the hosting tool enforces a separate confirmation.
+
 ## Non-Negotiable Contract
 
 - Never use the source screenshot as a page background.
@@ -77,7 +79,8 @@ List the major regions, exact text, controls, repeated patterns, imagery, and vi
 4. Capture the verified DOM using the active provider's supported HTML-to-design flow.
 5. Inspect metadata and a rendered Figma screenshot. Require independent expected sections plus nested `FRAME` and editable `TEXT` nodes.
 6. Treat a single flattened image or missing editable text as failed verification and recapture from semantic DOM.
-7. Complete every cleanup step in the runbook.
+7. Follow the active Figma workflow's distinction between a raw capture reference and a production design. If it requires deletion of the raw capture, first create and verify the final editable screen; the file must retain at least one complete editable design frame.
+8. Complete every cleanup step in the runbook.
 
 ### 7. Hand off
 

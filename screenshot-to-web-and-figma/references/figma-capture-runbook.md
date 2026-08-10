@@ -29,6 +29,8 @@ Inspect captured metadata and a Figma screenshot. Require:
 
 A single image node, missing editable text, or absent expected sections fails verification. Correct the semantic DOM or root selector and capture again.
 
+The active Figma workflow may classify the raw HTML capture as a temporary reference. In that case, use it to create and verify the final editable screen before deleting the reference. Never finish with an empty file or a file containing only a flattened image. Component libraries and prototype wiring remain follow-up scope unless the active workflow makes them mandatory for a valid first editable screen.
+
 ## Cleanup
 
 1. Remove the temporary capture script from source.
