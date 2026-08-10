@@ -25,6 +25,8 @@ Before coding, record:
 - icons, logos, photos, illustrations, and other image regions
 - overlays, sheets, dialogs, toasts, and navigation states
 
+Flag uncertain OCR copy instead of silently substituting different text; keep confirmed copy as editable text nodes.
+
 ## Native DOM Mapping
 
 | Visible element | Preferred implementation |

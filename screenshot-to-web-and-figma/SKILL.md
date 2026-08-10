@@ -7,7 +7,7 @@ description: Use when a user provides UI screenshots, mockups, wireframes, or pr
 
 ## Overview
 
-Reconstruct supplied UI images as real interactive DOM, publish the verified page, and capture that DOM into a new editable Figma Design file. Treat the image as evidence to inspect, never as the implementation.
+Reconstruct supplied UI images as semantic interactive DOM, publish the verified page, and capture that DOM into a Figma Design file with independently editable layers. Treat the image as evidence to inspect, never as the implementation.
 
 ## Required Capability Routing
 

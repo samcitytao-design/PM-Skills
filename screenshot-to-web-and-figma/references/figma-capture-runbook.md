@@ -4,7 +4,7 @@
 
 - Finish local visual and interaction verification first.
 - Identify the smallest root selector containing the reconstructed screen.
-- Record source viewport dimensions.
+- Record source viewport dimensions and assign the screen a stable descriptive name.
 - Load `figma:figma-create-new-file`, `figma:figma-generate-design`, and `figma:figma-use` before corresponding write calls.
 
 ## Capture

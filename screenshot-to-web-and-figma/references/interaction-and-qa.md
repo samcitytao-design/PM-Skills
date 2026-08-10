@@ -25,6 +25,7 @@ Complete this evidence-backed checklist before deployment:
 - [ ] Major region bounds, spacing, typography, colors, radii, borders, and shadows were checked.
 - [ ] Exact visible copy was checked.
 - [ ] Every visible interactive control was exercised.
+- [ ] Selected, disabled, loading, completed, and claimed states match the source or a disclosed inference.
 - [ ] Dialogs, toasts, overlays, progress, and completion states close or reset predictably.
 - [ ] Keyboard focus and accessible names work where practical.
 - [ ] Browser console contains no unexplained errors.
