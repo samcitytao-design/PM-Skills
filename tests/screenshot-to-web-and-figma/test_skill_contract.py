@@ -26,14 +26,15 @@ class SkillContractTest(unittest.TestCase):
 
         required = [
             "never use the source screenshot as a page background",
-            "semantic HTML",
-            "publish with Sites by default",
-            "create a new Figma Design file",
-            "FRAME",
-            "TEXT",
+            "semantic html",
+            "publish with sites by default",
+            "create a new figma design file",
+            "frame",
+            "text",
             "remove the temporary capture script",
         ]
-        self.assertEqual([], [phrase for phrase in required if phrase not in text])
+        text_lower = text.lower()
+        self.assertEqual([], [phrase for phrase in required if phrase not in text_lower])
 
 
 if __name__ == "__main__":

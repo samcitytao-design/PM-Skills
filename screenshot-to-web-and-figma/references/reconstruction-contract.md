@@ -1,0 +1,54 @@
+# Reconstruction Contract
+
+## Source Classification
+
+| Source | Default treatment |
+|---|---|
+| Complete mobile app | Preserve the full pixel viewport, including system and bottom navigation regions. |
+| Mobile web | Preserve browser-safe content bounds and distinguish page UI from browser chrome. |
+| Tablet | Preserve orientation and source ratio; do not normalize to a phone canvas. |
+| Desktop | Preserve source viewport and scrolling model; use responsive behavior only beyond it. |
+| Partial UI | Rebuild the visible region; infer surrounding viewport only when needed and label the assumption. |
+| Multi-screen image | Separate each complete screen/state, assign stable IDs, and implement their transitions. |
+
+Do not normalize complete screenshots to a different standard width unless the user explicitly requests it.
+
+## Element Inventory
+
+Before coding, record:
+
+- source dimensions and screen classification
+- major layout regions and stacking order
+- exact visible copy and typography hierarchy
+- controls, selected/disabled/completed states, and destinations
+- repeated patterns and proposed component names
+- icons, logos, photos, illustrations, and other image regions
+- overlays, sheets, dialogs, toasts, and navigation states
+
+## Native DOM Mapping
+
+| Visible element | Preferred implementation |
+|---|---|
+| Action | `<button type="button">` with a visible state change |
+| Navigation | `<nav>` containing links or buttons with selected state |
+| Progress | `<progress>` or an ARIA-labelled meter with a real fill element |
+| Dialog/sheet | Accessible dialog markup, focus handling, close action, and backdrop |
+| Repeated card/list row | Reusable React component rendered from structured data |
+| Exact text | Editable text node; do not rasterize it |
+
+Use CSS for layout, borders, shadows, radii, gradients, simple icons, and status shapes. Keep DOM nesting understandable because it becomes the basis of Figma layer structure.
+
+## Asset Rules
+
+Use image assets only for genuine photos, illustrations, brand marks, complex textures, or small details that cannot reasonably be reproduced as native DOM. Crop and size them as independent elements; do not combine nearby editable text or controls into the image.
+
+Never use:
+
+- the full source screenshot as a background
+- sliced screenshot regions as fake cards or controls
+- invisible hotspot overlays
+- a canvas rendering that flattens editable interface structure
+
+## Viewport and Responsiveness
+
+Match the source pixel viewport for primary validation. Prevent browser default margins and accidental scale changes. Keep fixed mobile shells centered only when the surrounding desktop preview requires it; the captured root must retain the source dimensions. Add graceful behavior at nearby widths without changing the source-view composition.

@@ -1,85 +1,119 @@
 ---
 name: screenshot-to-web-and-figma
-description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+description: Use when a user provides UI screenshots, mockups, wireframes, or prototype images and wants interactive webpage recreation, pixel-matched HTML or React, a public deployment, editable Figma layers, or any combination of those outputs.
 ---
 
-# Screenshot To Web And Figma
+# Screenshot to Web and Figma
 
 ## Overview
 
-[TODO: 1-2 sentences explaining what this skill enables]
+Reconstruct supplied UI images as real interactive DOM, publish the verified page, and capture that DOM into a new editable Figma Design file. Treat the image as evidence to inspect, never as the implementation.
 
-## Structuring This Skill
+## Required Capability Routing
 
-[TODO: Choose the structure that best fits this skill's purpose. Common patterns:
+- **REQUIRED SUB-SKILL:** Use `sites:sites-building` for the web project and `sites:sites-hosting` for default publication.
+- **REQUIRED SUB-SKILL:** Use `figma:figma-create-new-file` before creating a Figma file.
+- **REQUIRED SUB-SKILL:** Use `figma:figma-generate-design` with `figma:figma-use` for webpage-to-Figma translation; load `figma:figma-use` before any `use_figma` call.
+- Use an available browser-control capability for viewport rendering, interaction checks, capture navigation, and screenshots.
+- Use the active image-inspection capability to inspect every supplied image at original resolution before planning.
 
-**1. Workflow-Based** (best for sequential processes)
-- Works well when there are clear step-by-step procedures
-- Example: DOCX skill with "Workflow Decision Tree" -> "Reading" -> "Creating" -> "Editing"
-- Structure: ## Overview -> ## Workflow Decision Tree -> ## Step 1 -> ## Step 2...
+If a required capability is unavailable, finish all independent stages, preserve their artifacts, and report the exact capability or authorization needed to resume.
 
-**2. Task-Based** (best for tool collections)
-- Works well when the skill offers different operations/capabilities
-- Example: PDF skill with "Quick Start" -> "Merge PDFs" -> "Split PDFs" -> "Extract Text"
-- Structure: ## Overview -> ## Quick Start -> ## Task Category 1 -> ## Task Category 2...
+## Non-Negotiable Contract
 
-**3. Reference/Guidelines** (best for standards or specifications)
-- Works well for brand guidelines, coding standards, or requirements
-- Example: Brand styling with "Brand Guidelines" -> "Colors" -> "Typography" -> "Features"
-- Structure: ## Overview -> ## Guidelines -> ## Specifications -> ## Usage...
+- Never use the source screenshot as a page background.
+- Never substitute full-page image slices, invisible hotspots, or a flattened screenshot for native structure.
+- Use React and semantic HTML/CSS by default. Build text, cards, buttons, navigation, inputs, progress, status, and dialogs as real elements.
+- Make repeated patterns reusable components with stable, descriptive names.
+- Preserve exact visible copy and the complete-screen source viewport unless the user explicitly requests responsive redesign.
+- Implement every visible control with a reversible interaction or a clear internal destination.
+- Publish with Sites by default after local verification.
+- Create a new Figma Design file unless the user explicitly supplies a destination.
+- Verify nested editable `FRAME` and `TEXT` nodes before calling the Figma result editable.
+- Remove the temporary capture script, stop local servers, close capture tabs, reset altered viewports, and verify source cleanliness before handoff.
 
-**4. Capabilities-Based** (best for integrated systems)
-- Works well when the skill provides multiple interrelated features
-- Example: Product Management with "Core Capabilities" -> numbered capability list
-- Structure: ## Overview -> ## Core Capabilities -> ### 1. Feature -> ### 2. Feature...
+## Workflow
 
-Patterns can be mixed and matched as needed. Most skills combine patterns (e.g., start with task-based, add workflow for complex operations).
+### 1. Inspect and classify the input
 
-Delete this entire "Structuring This Skill" section when done - it's just guidance.]
+1. Confirm every referenced image is readable.
+2. Inspect each image at original resolution and record its pixel dimensions.
+3. Classify each source as complete mobile app, mobile web, tablet, desktop, partial UI, or multi-screen.
+4. Read [references/reconstruction-contract.md](references/reconstruction-contract.md) completely.
+5. Ask one concise question only when a missing choice materially changes screen count, viewport, or behavior. Otherwise state the assumption and continue.
 
-## [TODO: Replace with the first main section based on chosen structure]
+### 2. Inventory the screen
 
-[TODO: Add content here. See examples in existing skills:
-- Code samples for technical skills
-- Decision trees for complex workflows
-- Concrete examples with realistic user requests
-- References to scripts/templates/references as needed]
+List the major regions, exact text, controls, repeated patterns, imagery, and visible states. Identify likely component boundaries and interactions before coding. For multiple screens, assign stable screen IDs and preserve their relationships.
 
-## Resources (optional)
+### 3. Build semantic interactive DOM
 
-Create only the resource directories this skill actually needs. Delete this section if no resources are required.
+1. Create or reuse a React project that supports public Sites hosting.
+2. Reconstruct the screen with semantic HTML/CSS and reusable components.
+3. Use native elements and CSS shapes/icons where practical. Use raster assets only for genuine image content or visual details that cannot reasonably be native DOM.
+4. Read [references/interaction-and-qa.md](references/interaction-and-qa.md) completely.
+5. Implement explicit behavior first; infer missing behavior with reversible local state such as dialogs, toasts, progress, claim/completion, tabs, and internal navigation.
 
-### scripts/
-Executable code (Python/Bash/etc.) that can be run directly to perform specific operations.
+### 4. Verify and iterate locally
 
-**Examples from other skills:**
-- PDF skill: `fill_fillable_fields.py`, `extract_form_field_info.py` - utilities for PDF manipulation
-- DOCX skill: `document.py`, `utilities.py` - Python modules for document processing
+1. Run the available lint, type, test, and production-build commands.
+2. Open the page at the source viewport and capture a rendered screenshot.
+3. Compare structure, bounds, spacing, typography, color, radii, shadows, icons, and content density.
+4. Exercise every visible control and inspect each resulting state.
+5. Iterate until the page is a credible pixel-level first pass. Record remaining differences instead of hiding them.
 
-**Appropriate for:** Python scripts, shell scripts, or any executable code that performs automation, data processing, or specific operations.
+### 5. Publish publicly
 
-**Note:** Scripts may be executed without loading into context, but can still be read by Codex for patching or environment adjustments.
+1. Use `sites:sites-hosting` after the Sites build workflow.
+2. Publish the locally verified page by default.
+3. Open the returned public URL in a clean view and verify that the intended screen renders.
+4. Preserve the URL for final handoff. If authorization blocks publication, preserve the verified source and state the exact resume step.
 
-### references/
-Documentation and reference material intended to be loaded into context to inform Codex's process and thinking.
+### 6. Capture editable Figma layers
 
-**Examples from other skills:**
-- Product management: `communication.md`, `context_building.md` - detailed workflow guides
-- BigQuery: API reference documentation and query examples
-- Finance: Schema documentation, company policies
+1. Read [references/figma-capture-runbook.md](references/figma-capture-runbook.md) completely.
+2. Load the mandatory Figma Skills before their corresponding write calls.
+3. Create a new Figma Design file unless the user supplied a destination.
+4. Capture the verified DOM using the active provider's supported HTML-to-design flow.
+5. Inspect metadata and a rendered Figma screenshot. Require independent expected sections plus nested `FRAME` and editable `TEXT` nodes.
+6. Treat a single flattened image or missing editable text as failed verification and recapture from semantic DOM.
+7. Complete every cleanup step in the runbook.
 
-**Appropriate for:** In-depth documentation, API references, database schemas, comprehensive guides, or any detailed information that Codex should reference while working.
+### 7. Hand off
 
-### assets/
-Files not intended to be loaded into context, but rather used within the output Codex produces.
+Return, in this order:
 
-**Examples from other skills:**
-- Brand styling: PowerPoint template files (.pptx), logo files
-- Frontend builder: HTML/React boilerplate project directories
-- Typography: Font files (.ttf, .woff2)
+1. Source directory or repository path.
+2. Public webpage URL.
+3. Figma file URL and captured node.
+4. Interaction summary.
+5. Verification commands and evidence.
+6. Known differences, substitutions, or recoverable partial failures.
 
-**Appropriate for:** Templates, boilerplate code, document templates, images, icons, fonts, or any files meant to be copied or used in the final output.
+State that HTML interactions do not automatically become Figma prototype connections. Offer component/variant/prototype wiring as a separate follow-up.
 
----
+## Failure Recovery
 
-**Not every skill requires all three types of resources.**
+| Failure | Required response |
+|---|---|
+| Missing image | Ask the user to attach it again; do not invent the UI. |
+| Ambiguous partial crop | Infer a viewport when safe; ask only if the viewport changes the intended deliverable. |
+| Missing font or icon | Use the closest available substitute and disclose it. |
+| Build or interaction failure | Diagnose and repair before deployment. |
+| Sites authorization failure | Preserve verified source and local evidence; report the resume step. |
+| Figma authorization failure | Preserve source and public URL; resume at file creation after login. |
+| Capture failure | Check capture script, URL reachability, root selector, viewport, and terminal capture status. |
+| Flattened Figma result | Fail verification and recapture; never report editable success. |
+
+## Red Flags
+
+- Coding before inspecting the source at original resolution.
+- Styling a single full-screen `<img>` or background image.
+- Adding transparent click regions over screenshot pixels.
+- Claiming pixel accuracy without a target-viewport render comparison.
+- Publishing before build and interaction checks pass.
+- Calling Figma output editable without metadata evidence.
+- Leaving capture instrumentation, servers, tabs, or source diffs behind.
+- Claiming webpage behavior became Figma prototype wiring automatically.
+
+If any red flag appears, stop that stage, correct it, and repeat its verification.
