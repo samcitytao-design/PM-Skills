@@ -1,0 +1,4 @@
+interface:
+  display_name: "Screenshot to Web and Figma"
+  short_description: "Recreate UI screenshots as webpages and editable Figma layers"
+  default_prompt: "Use $screenshot-to-web-and-figma to recreate the attached UI screenshot as interactive React/HTML, publish it publicly, and create a new editable Figma Design file."
