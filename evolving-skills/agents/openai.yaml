@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evolving Skills"
+  short_description: "从完整真实使用反馈中受控迭代用户指定的 Target Skill"
+  default_prompt: "Use $evolving-skills to evolve the Target Skill I name from its complete real usage history, validate the generalized lessons, and synchronize only the copies I authorize."
