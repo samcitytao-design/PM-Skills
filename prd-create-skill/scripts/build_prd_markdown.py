@@ -27,9 +27,11 @@ LOGIC_SLOTS = (
     ("applicability", "适用条件"),
     ("display", "页面规则"),
     ("interactions", "交互流程"),
+    ("rules", "业务规则"),
     ("configuration", "配置参数"),
     ("lifecycle", "生命周期与频次"),
     ("fallback", "优先级与异常降级"),
+    ("copy", "界面文案"),
     ("measurement", "数据与度量"),
 )
 
@@ -180,7 +182,12 @@ def _render_page(page: dict[str, Any], image_mode: str, acceptance_detail: str) 
     return lines
 
 
-def _variant_logic(variant: dict[str, Any]) -> str:
+def _variant_logic(
+    variant: dict[str, Any],
+    shared_rules: Any = None,
+    shared_acceptance: Any = None,
+    include_acceptance: bool = True,
+) -> str:
     parts = []
     name = _text(variant.get("name"))
     if name:
@@ -189,12 +196,23 @@ def _variant_logic(variant: dict[str, Any]) -> str:
         values = _items(variant.get(key))
         if values:
             parts.append(_numbered_cell(label, values))
+    if _items(shared_rules):
+        parts.append(_numbered_cell("共用规则", _items(shared_rules)))
+    if include_acceptance and _items(variant.get("acceptance")):
+        parts.append(_numbered_cell("本行验收标准", _items(variant.get("acceptance"))))
+    if include_acceptance and _items(shared_acceptance):
+        parts.append(_numbered_cell("共用验收标准", _items(shared_acceptance)))
     if len(parts) == (1 if name else 0):
         raise ValueError(f"variant {_text(variant.get('id')) or name or '<unknown>'} has no requirement logic")
     return "<br><br>".join(parts)
 
 
-def _render_test_point(test_point: dict[str, Any], image_mode: str, acceptance_detail: str) -> list[str]:
+def _render_test_point(
+    test_point: dict[str, Any],
+    image_mode: str,
+    acceptance_detail: str,
+    logic_placement: str,
+) -> list[str]:
     test_id = _text(test_point.get("id"))
     name = _text(test_point.get("name"))
     if not test_id or not name:
@@ -219,11 +237,24 @@ def _render_test_point(test_point: dict[str, Any], image_mode: str, acceptance_d
             raise ValueError(f"duplicate variant id in {test_id}: {variant_id}")
         seen_variant_ids.add(variant_id)
         images = variant.get("images") or ([variant.get("image")] if variant.get("image") else [])
-        lines.append(f"| {_render_images(images, variant_id, image_mode)} | {_variant_logic(variant)} |")
+        row_complete = logic_placement == "row_complete"
+        shared_rules = test_point.get("shared_rules") if row_complete else None
+        shared_acceptance = test_point.get("acceptance") if row_complete else None
+        requirement = _variant_logic(
+            variant,
+            shared_rules,
+            shared_acceptance,
+            acceptance_detail != "none",
+        )
+        lines.append(
+            f"| {_render_images(images, variant_id, image_mode)} | "
+            f"{requirement} |"
+        )
     lines.append("")
-    lines.extend(_bullet_section("共用规则", test_point.get("shared_rules"), 4))
-    if acceptance_detail != "none":
-        lines.extend(_bullet_section("验收标准", test_point.get("acceptance"), 4))
+    if logic_placement == "shared_below":
+        lines.extend(_bullet_section("共用规则", test_point.get("shared_rules"), 4))
+        if acceptance_detail != "none":
+            lines.extend(_bullet_section("验收标准", test_point.get("acceptance"), 4))
     return lines
 
 
@@ -270,6 +301,9 @@ def render_prd(model: dict[str, Any]) -> str:
     acceptance_detail = _text(delivery.get("acceptance_detail")) or "concise"
     if acceptance_detail not in {"none", "concise", "detailed"}:
         raise ValueError("delivery.acceptance_detail must be none, concise, or detailed")
+    logic_placement = _text(delivery.get("logic_placement")) or "shared_below"
+    if profile == "review_table" and logic_placement not in {"row_complete", "shared_below"}:
+        raise ValueError("delivery.logic_placement must be row_complete or shared_below")
 
     if not isinstance(model.get("overview"), dict) or not model["overview"]:
         raise ValueError("overview must be present as a non-empty object")
@@ -317,7 +351,7 @@ def render_prd(model: dict[str, Any]) -> str:
             if test_id in seen_test_ids:
                 raise ValueError(f"duplicate test point id: {test_id}")
             seen_test_ids.add(test_id)
-            lines.extend(_render_test_point(test_point, image_mode, acceptance_detail))
+            lines.extend(_render_test_point(test_point, image_mode, acceptance_detail, logic_placement))
 
     for key in ("rules", "data", "dependencies", "risks", "measurement"):
         if model.get(key):

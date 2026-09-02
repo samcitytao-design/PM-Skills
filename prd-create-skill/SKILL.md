@@ -94,7 +94,7 @@ Before drafting, present one consolidated confirmation pack containing:
 1. proposed page/test-point/variant map
 2. all product and interaction decisions currently discoverable
 3. applicable configuration, defaults, precedence, fallback, lifecycle, measurement, and acceptance decisions
-4. document-format decisions: language, template profile, section outline, table structure, image-reference mode, acceptance detail, output path/name, and update-existing/new-file choice
+4. document-format decisions: language, UI-copy language, template profile, section outline, table structure, review-table logic placement, image-reference mode, acceptance detail, output path/name, and update-existing/new-file choice
 5. the proposed final outline
 6. one representative page/test-point table populated with actual project evidence
 
@@ -118,9 +118,18 @@ Use the review-table profile by default when work is organized around test point
 
 - each test point or page requirement owns one table
 - every visual variant under the same test point is a separate row in that table
-- shared rules appear once below the table
+- confirm `row_complete` or `shared_below` logic placement in the template preview
+- use `row_complete` when each prototype or page state is reviewed as an implementation unit: every row must contain all applicable conditions, display rules, interactions, business/lifecycle rules, fallback, exact UI copy, and acceptance needed to understand and test that state without another section
+- use `shared_below` only when the user approves a compact comparison whose rows contain deltas and whose common logic is intentionally read once below the table
+- never split one page state's display, interaction, fallback, UI copy, or acceptance into parallel subsections outside its row when `row_complete` is selected; repeating genuinely shared logic is intentional in this mode
 - the right cell follows [references/review-table-template.md](references/review-table-template.md), omitting irrelevant slots
 - every meaningful action states its destination, result, close behavior, or retained state
+
+Keep background and goals short: one independently understandable idea per bullet. Put eligibility, state transitions, configuration effects, exceptions, and other detailed rules in the corresponding page/test-point requirement instead of expanding the overview.
+
+Treat the approved section outline as an output contract. Do not restore a removed section or create a standalone rules/flow/copy module when the user asked for that content to live inside the corresponding page requirement; place necessary content in the nearest approved section instead.
+
+When the PRD narrative and interface copy use different languages, keep explanations in the approved document language and record each exact interface string in the applicable row beside its element, state, and display condition. Do not translate or paraphrase confirmed UI copy.
 
 Use the full-spec profile for products better represented as independent pages, flows, states, and recovery paths.
 
@@ -165,6 +174,7 @@ The task is incomplete if any of these are true:
 - an irrelevant domain module was forced onto the project
 - prototype images cannot be traced to stable source IDs
 - variants from one confirmed test point were split into competing tables without a stated reason
+- review-table logic placement differs from the approved preview, or `row_complete` content requires reviewers to assemble one state from table-external display, interaction, copy, or acceptance sections
 - a key action lacks a destination, result, close behavior, or retained state
 - final Markdown contains unresolved placeholders or a pending-questions section
 - the document requires a specific Markdown editor to remain understandable
@@ -178,6 +188,8 @@ The task is incomplete if any of these are true:
 | Direct images | Propose a page/test-point/variant map in the confirmation pack |
 | Material ambiguity | Add it to the consolidated pre-draft confirmation pack |
 | Experiment variants | Use one table per test point and one row per variant |
+| Page/state rows are reviewed independently | Confirm `row_complete`; make every row self-contained and testable |
+| Compact delta comparison is explicitly preferred | Confirm `shared_below`; keep row differences in-table and common logic once below |
 | Document format unknown | Preview the outline and sample table; obtain approval |
 | Domain signal present | Load only the matching conditional module |
 | User authorizes recommendations | Record each delegated decision |

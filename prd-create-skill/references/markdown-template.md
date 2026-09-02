@@ -1,6 +1,6 @@
 # Portable Markdown Profiles
 
-Select and preview one profile before formal drafting. Do not silently choose a document structure.
+Select and preview one profile before formal drafting. For review tables, also preview whether logic is self-contained per row or shared below the table. Do not silently choose a document structure.
 
 ## Profile Selection
 
@@ -75,8 +75,9 @@ Use Mermaid only for meaningful multi-step or branching flows and follow it with
 - never use absolute local filesystem paths
 - use standard headings, lists, blockquotes, tables, images, and fenced Mermaid
 - avoid external CSS, scripts, editor directives, or style-dependent meaning
-- avoid nested tables and long prose inside table cells
-- use `<br>` only inside compact summary tables
+- avoid nested tables and unstructured paragraphs inside table cells
+- when `row_complete` is confirmed, use short bold slot labels, numbered statements, and `<br>` separators so a complete row remains scannable
+- use `<br>` only inside tables; do not depend on editor-specific styling for hierarchy
 - include text steps when Mermaid support is uncertain
 
 ## Final Sections

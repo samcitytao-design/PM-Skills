@@ -7,7 +7,7 @@ Use this logical model whether the document is written directly or generated fro
 | Field | Required | Content |
 |---|---|---|
 | `document_profile` | Yes | `full_spec` or `review_table`, confirmed before drafting |
-| `delivery` | Yes | `language`, `image_mode`, `acceptance_detail`, `output_target`, and `update_mode` |
+| `delivery` | Yes | `language`, optional distinct `ui_copy_language`, `image_mode`, `acceptance_detail`, `output_target`, `update_mode`, and confirmed review-table `logic_placement` |
 | `meta` | Yes | title, version, date, status, source mode |
 | `overview` | Yes | background, goal, users, scenarios, success, scope, non-goals as applicable |
 | `sources` | Yes | prototype files, manifest source, evidence notes |
@@ -45,8 +45,8 @@ Every test point contains:
 
 - `id`, `name`, and optional purpose
 - `variants`: one row per confirmed style, state, position, or value
-- `shared_rules`: logic common to every variant, written once
-- `acceptance`: concise test-point acceptance only when included by the approved template
+- `shared_rules`: logic common to every variant; rendered in every row for `row_complete` or once below for `shared_below`
+- `acceptance`: concise test-point acceptance; rendered in every row for `row_complete` or once below for `shared_below`
 
 Each variant contains:
 
@@ -55,7 +55,9 @@ Each variant contains:
 - `display`: visible behavior and layout differences
 - `interactions`: actions with destination, result, close behavior, or retained state
 - `configuration`: parameter references needed in this row
-- `lifecycle`, `fallback`, and `measurement` only when applicable
+- `rules`, `lifecycle`, `fallback`, `copy`, `measurement`, and row-specific `acceptance` only when applicable
+
+`delivery.logic_placement` accepts `row_complete` or `shared_below`. New review-table documents must set it explicitly after template confirmation. The renderer defaults to `shared_below` only for backward compatibility with existing models.
 
 The renderer must preserve test-point grouping. It must not turn each variant image into an independent page section.
 
@@ -78,8 +80,10 @@ An unresolved blocking decision makes the model invalid.
   "document_profile": "review_table",
   "delivery": {
     "language": "zh-CN",
+    "ui_copy_language": "en",
     "image_mode": "relative",
     "acceptance_detail": "concise",
+    "logic_placement": "row_complete",
     "output_target": "Example-PRD.md",
     "update_mode": "new_file"
   },
@@ -104,7 +108,9 @@ An unresolved blocking decision makes the model invalid.
           "images": ["assets/V01.png"],
           "applicability": ["parameter=value_a"],
           "display": ["Confirmed visible behavior."],
-          "interactions": ["Select the primary control → confirmed destination or result."]
+          "interactions": ["Select the primary control → confirmed destination or result."],
+          "copy": ["Primary action: Exact approved copy"],
+          "acceptance": ["The matching state shows the approved action and reaches the confirmed result."]
         }
       ],
       "shared_rules": [],
@@ -124,4 +130,5 @@ An unresolved blocking decision makes the model invalid.
 - `review_table` requires non-empty `test_points`, and every test point requires at least one variant.
 - `delivery.image_mode` is `relative`, `external`, or `mixed`.
 - `delivery.update_mode` is `new_file` or `update_existing`.
+- `delivery.logic_placement`, when present, is `row_complete` or `shared_below`; omission retains legacy `shared_below` rendering.
 - Absolute local image paths are never valid.

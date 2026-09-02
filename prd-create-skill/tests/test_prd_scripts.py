@@ -86,6 +86,37 @@ class ReviewTableTests(unittest.TestCase):
             self.assertIn("![V02 prototype](assets/V02.png)", output)
             self.assertEqual(validator.validate_markdown(document, "review-table", "relative"), [])
 
+    def test_review_table_row_complete_inlines_shared_logic_copy_and_acceptance(self) -> None:
+        model = self._model()
+        model["delivery"]["logic_placement"] = "row_complete"
+        model["test_points"][0]["variants"][0]["copy"] = ["Primary action: Continue"]
+        model["test_points"][0]["variants"][1]["copy"] = ["Primary action: Confirm"]
+
+        output = renderer.render_prd(model)
+
+        self.assertNotIn("#### 共用规则", output)
+        self.assertNotIn("#### 验收标准", output)
+        self.assertEqual(output.count("Only one entry position is visible."), 2)
+        self.assertEqual(output.count("The selected value renders the matching entry."), 2)
+        self.assertIn("**界面文案**", output)
+        self.assertIn("Primary action: Continue", output)
+        self.assertIn("Primary action: Confirm", output)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            assets = root / "assets"
+            assets.mkdir()
+            (assets / "V01.png").write_bytes(b"fixture")
+            (assets / "V02.png").write_bytes(b"fixture")
+            document = root / "row-complete.md"
+            document.write_text(output, encoding="utf-8")
+            self.assertEqual(validator.validate_markdown(document, "review-table", "relative"), [])
+
+    def test_review_table_rejects_unknown_logic_placement(self) -> None:
+        model = self._model()
+        model["delivery"]["logic_placement"] = "mixed"
+        with self.assertRaisesRegex(ValueError, "logic_placement"):
+            renderer.render_prd(model)
+
     def test_absolute_local_image_is_rejected(self) -> None:
         model = self._model()
         model["test_points"][0]["variants"][0]["images"] = ["/tmp/V01.png"]

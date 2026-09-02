@@ -52,7 +52,7 @@ Batch all currently discoverable decisions by default. Cover only applicable top
 | Configuration | independent parameters, exact values, defaults, precedence, invalid/missing-value fallback, effective timing |
 | Lifecycle | first use, frequency, consumed timing, version reset, persistence |
 | Measurement | exposure, click, funnel success, failure reason, guardrails |
-| Document format | language, full-spec/review-table profile, outline, table columns, image mode, acceptance detail, output path/name, update-existing/new-file |
+| Document format | document language, UI-copy language, full-spec/review-table profile, outline, table columns, review-table logic placement (`row_complete` or `shared_below`), image mode, acceptance detail, output path/name, update-existing/new-file |
 
 For each unresolved blocking row, provide 2-3 mutually exclusive options, concrete impact, and one recommendation. The user may approve all recommendations in one reply.
 
@@ -78,5 +78,5 @@ Formal drafting can start only when:
 - evidence and inference are separated
 - activated modules are recorded
 - expected PRD coverage is agreed
-- document profile, outline, table structure, image mode, acceptance detail, and output target are confirmed
+- document profile, outline, table structure, review-table logic placement, document/UI-copy languages, image mode, acceptance detail, and output target are confirmed
 - the representative template preview is explicitly approved
