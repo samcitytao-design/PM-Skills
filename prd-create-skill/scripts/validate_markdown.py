@@ -13,7 +13,7 @@ from urllib.parse import unquote, urlsplit
 PLACEHOLDER_RE = re.compile(r"\b(?:TBD|TODO)\b|暂定方案|以后补充|待补充", re.IGNORECASE)
 PAGE_HEADING_RE = re.compile(r"^###\s+([A-Za-z0-9][A-Za-z0-9._-]*)\s+.+$", re.MULTILINE)
 SECTION_HEADING_RE = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
-PAGE_SECTION_RE = re.compile(r"^##\s+(?:页面需求|Page Requirements)\s*$", re.MULTILINE | re.IGNORECASE)
+PAGE_SECTION_RE = re.compile(r"^##\s+(?:页面需求|Page Requirements|(?:3\.\s*)?需求详述)\s*$", re.MULTILINE | re.IGNORECASE)
 IMAGE_START_RE = re.compile(r"!\[[^\]]*\]\(")
 LINK_START_RE = re.compile(r"(?<!!)\[[^\]]+\]\(")
 PENDING_SECTION_RE = re.compile(
@@ -231,7 +231,7 @@ def _validate_full_spec(text: str, acceptance_detail: str) -> list[str]:
     return issues
 
 
-def _validate_review_table(text: str) -> list[str]:
+def _validate_review_table(text: str, five_section: bool = False) -> list[str]:
     issues = []
     sections = _sections(text, SECTION_HEADING_RE)
     names = [name for name, _ in sections]
@@ -242,21 +242,49 @@ def _validate_review_table(text: str) -> list[str]:
         return ["No review-table test-point headings were found."]
 
     for name, section in sections:
+        if five_section and name in {"整体流程", "流程步骤", "文字步骤"}:
+            continue
         matching = [(header, rows) for header, rows in _table_blocks(section) if _is_prototype_requirement_table(header)]
         if len(matching) != 1:
             issues.append(f"Test point {name} must contain exactly one two-column prototype/requirement table.")
             continue
-        _, rows = matching[0]
+        header, rows = matching[0]
+        if five_section and header != ["原型图", "具体需求逻辑"]:
+            issues.append(f"Test point {name} must preserve columns 原型图 | 具体需求逻辑.")
         if not rows:
             issues.append(f"Test point {name} has no variant rows.")
             continue
         for index, row in enumerate(rows, 1):
             if len(row) != 2:
                 continue
-            if not _extract_targets(row[0], image=True):
+            shared = five_section and "共用模块" in row[0] and "无独立原型" in row[0]
+            if not _extract_targets(row[0], image=True) and not shared:
                 issues.append(f"Test point {name} variant row {index} has no prototype image.")
+            if five_section and not re.search(r"\*\*[^*]+\*\*<br\s*/?>\s*1\.", row[1], re.IGNORECASE):
+                issues.append(f"Test point {name} row {index} requires bold labels and numbered in-cell points.")
             if not re.search(r"\w|[\u4e00-\u9fff]", re.sub(r"<br\s*/?>", " ", row[1], flags=re.IGNORECASE)):
                 issues.append(f"Test point {name} variant row {index} has no requirement logic.")
+    return issues
+
+
+def _validate_five_section_outline(text: str) -> list[str]:
+    expected = ["1. 需求背景", "2. 需求目标", "3. 需求详述", "4. 云控项", "5. 埋点"]
+    # Ignore code examples, so a fenced example cannot satisfy the real contract.
+    plain = re.sub(r"```[^\n]*\n.*?```", "", text, flags=re.S)
+    headings = re.findall(r"^##\s+(.+?)\s*$", plain, re.M)
+    issues = []
+    if headings != expected:
+        issues.append("five-section outline must contain exactly the five approved modules in order.")
+    region = _page_region(plain)
+    if not any(_is_prototype_requirement_table(h) for h, _ in _table_blocks(region)):
+        issues.append("five-section requirements must retain 原型图 | 具体需求逻辑 tables.")
+    for name, section in _sections(plain, SECTION_HEADING_RE):
+        if name in {"整体流程", "流程步骤", "文字步骤"}:
+            continue
+        # Each state remains in-table; long detached prose is not a substitute.
+        outside = [line for line in section.splitlines()[1:] if line.strip() and not line.lstrip().startswith("|")]
+        if outside:
+            issues.append(f"five-section module {name} has detached requirement prose; keep logic in the right cell.")
     return issues
 
 
@@ -285,25 +313,32 @@ def validate_markdown(
     profile: str = "auto",
     image_mode: str = "relative",
     acceptance_detail: str = "concise",
+    outline: str = "auto",
 ) -> list[str]:
     path = Path(path)
     text = path.read_text(encoding="utf-8")
     issues: list[str] = []
+    if outline not in {"auto", "legacy", "five-section"}:
+        raise ValueError("outline must be auto, legacy, or five-section")
+    five_section = outline == "five-section" or (outline == "auto" and bool(
+        re.search(r"<!--\s*prd-outline:\s*five-section\s*-->|^##\s+3\.\s*需求详述\s*$", text, re.M)))
 
     if PLACEHOLDER_RE.search(text):
         issues.append("Unresolved placeholder found in final Markdown.")
     if PENDING_SECTION_RE.search(text):
         issues.append("Final Markdown must not contain a pending-questions section.")
     if not PAGE_SECTION_RE.search(text):
-        issues.append("No 页面需求 or Page Requirements section was found.")
+        issues.append("No 页面需求, 需求详述 or Page Requirements section was found.")
 
     issues.extend(_validate_headings(text))
     issues.extend(_validate_tables(text))
     issues.extend(_validate_mermaid(text))
 
-    selected_profile = _detect_profile(text) if profile == "auto" else profile
+    if five_section:
+        issues.extend(_validate_five_section_outline(text))
+    selected_profile = ("review-table" if five_section else _detect_profile(text)) if profile == "auto" else profile
     if selected_profile == "review-table":
-        issues.extend(_validate_review_table(text))
+        issues.extend(_validate_review_table(text, five_section))
     else:
         issues.extend(_validate_full_spec(text, acceptance_detail))
 
@@ -343,9 +378,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--profile", choices=("auto", "full-spec", "review-table"), default="auto")
     parser.add_argument("--image-mode", choices=("relative", "external", "mixed"), default="relative")
     parser.add_argument("--acceptance-detail", choices=("none", "concise", "detailed"), default="concise")
+    parser.add_argument("--outline", choices=("auto", "legacy", "five-section"), default="auto")
     args = parser.parse_args(argv)
 
-    issues = validate_markdown(args.document, args.profile, args.image_mode, args.acceptance_detail)
+    issues = validate_markdown(args.document, args.profile, args.image_mode, args.acceptance_detail, args.outline)
     if issues:
         for issue in issues:
             print(f"ERROR: {issue}")

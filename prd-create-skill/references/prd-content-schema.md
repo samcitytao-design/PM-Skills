@@ -8,7 +8,7 @@ Use this logical model whether the document is written directly or generated fro
 |---|---|---|
 | `document_profile` | Yes | `full_spec` or `review_table`, confirmed before drafting |
 | `delivery` | Yes | `language`, optional distinct `ui_copy_language`, `image_mode`, `acceptance_detail`, `output_target`, `update_mode`, and confirmed review-table `logic_placement` |
-| `meta` | Yes | title, version, date, status, source mode |
+| `meta` | Yes | title; other metadata is internal or rendered only if the output contract includes it |
 | `overview` | Yes | background, goal, users, scenarios, success, scope, non-goals as applicable |
 | `sources` | Yes | prototype files, manifest source, evidence notes |
 | `pages` | For `full_spec` | stable page/state records |
@@ -57,9 +57,15 @@ Each variant contains:
 - `configuration`: parameter references needed in this row
 - `rules`, `lifecycle`, `fallback`, `copy`, `measurement`, and row-specific `acceptance` only when applicable
 
-`delivery.logic_placement` accepts `row_complete` or `shared_below`. New review-table documents must set it explicitly after template confirmation. The renderer defaults to `shared_below` only for backward compatibility with existing models.
+`delivery.logic_placement` accepts `row_complete` or `shared_below`. New review-table documents must set it explicitly after resolving the output contract through explicit instructions, an approved reference, or standing defaults. The renderer defaults to `shared_below` only for backward compatibility with existing models.
 
 The renderer must preserve test-point grouping. It must not turn each variant image into an independent page section.
+
+## Five-Module Rendering
+
+Set `delivery.outline_profile` to `five_section` for the standing format. It requires `review_table` and `row_complete`. Supply `overview.background` and `overview.goals` as concise text/list values, `configuration_summary` as concise responsibility statements, and `tracking` as a list of `{event, trigger, parameters}` objects. Each must be explicit; use a truthful no-new-controls/no-new-tracking statement for an inapplicable module rather than inventing capabilities.
+
+Sources and decisions are retained internally, not rendered as extra sections. Put rules, data, state, recovery and dependencies in applicable variant rows; non-empty detached top-level rule collections are rejected rather than silently dropped. The five-module renderer never adds future/decision/acceptance chapters. Omitted `outline_profile` retains legacy output for backward compatibility only; new work follows the resolved contract.
 
 ## Decision Record
 
@@ -80,9 +86,10 @@ An unresolved blocking decision makes the model invalid.
   "document_profile": "review_table",
   "delivery": {
     "language": "zh-CN",
+    "outline_profile": "five_section",
     "ui_copy_language": "en",
     "image_mode": "relative",
-    "acceptance_detail": "concise",
+    "acceptance_detail": "none",
     "logic_placement": "row_complete",
     "output_target": "Example-PRD.md",
     "update_mode": "new_file"
@@ -93,10 +100,12 @@ An unresolved blocking decision makes the model invalid.
     "date": "2026-01-01"
   },
   "overview": {
-    "goal": "Help a user complete a defined task.",
-    "scope": ["Included behavior"]
+    "background": ["Describe the confirmed problem."],
+    "goals": ["Help a user complete the defined task."]
   },
   "sources": ["Confirmed prototype package"],
+  "configuration_summary": ["No remote controls are included in this example."],
+  "tracking": ["No new tracking is included in this example."],
   "test_points": [
     {
       "id": "T01",
@@ -123,6 +132,9 @@ An unresolved blocking decision makes the model invalid.
 ```
 
 ## Renderer Contract
+
+- `delivery.outline_profile` is `five_section` or `legacy` (omission is backward-compatible legacy).
+- The output contract, not the existence of an internal field, decides which modules render.
 
 - `blocking_decisions` must be present as an empty list.
 - `document_profile` and non-empty `delivery` must be present.

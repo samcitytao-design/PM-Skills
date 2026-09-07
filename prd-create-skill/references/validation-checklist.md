@@ -8,7 +8,7 @@
 - [ ] All blocking decisions resolved or delegated
 - [ ] Activated conditional modules have observable signals
 - [ ] Document profile, outline, table structure, review-table logic placement, document/UI-copy languages, image mode, acceptance detail, and output target explicitly confirmed
-- [ ] Representative table preview explicitly approved
+- [ ] Format resolved by explicit instruction, approved reference/preview, or standing preference; no redundant approval round
 
 ## Coverage
 
@@ -28,7 +28,7 @@
 - [ ] In `row_complete`, every row is independently understandable, implementable, and testable; all applicable common rules are repeated in-row and no “same as above” or table-external display/interaction/copy/acceptance lookup is required
 - [ ] In `shared_below`, rows contain variant differences and genuinely common rules plus test-point acceptance are stated once below the table
 - [ ] Each variant row uses applicable stable logic slots and omits irrelevant ones
-- [ ] Exact parameter keys and values are used; `/` and combined pseudo-values are not treated as experiment values
+- [ ] Configuration depth matches the request: product control responsibilities by default; exact keys only for requested implementation/experiment details
 
 ## Evidence Quality
 
@@ -52,6 +52,16 @@
 - [ ] Detailed requirement text remains outside images
 - [ ] Background and goals use one clear idea per bullet; page rules, eligibility, state transitions, configuration effects, and exceptions are not buried in the overview
 
+## Format-Change Regression Checks
+
+- [ ] Only the approved top-level modules appear, in order; the standing format has exactly five.
+- [ ] A module-list edit has not changed table columns, grouping, or image placement.
+- [ ] “分层分点 / 精简” was applied inside the right cell: bold short labels, numbered short points, no detached prose replacement.
+- [ ] Condensing removed repetition, not conditions, action destinations, close behavior, or recovery.
+- [ ] Reference files were actually read; structure was separated from their business examples.
+- [ ] Configuration summaries contain no unsolicited JSON or exhaustive key/type matrix; proposed tracking is not presented as observed logs.
+- [ ] Internal evidence/decision bookkeeping has not leaked into unrequested modules.
+
 ## Final Scan
 
 ```bash
@@ -63,7 +73,7 @@ Every match must be removed or occur in quoted historical source text explicitly
 Run the bundled validator with the confirmed modes, for example:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/prd-create-skill/scripts/validate_markdown.py" path/to/prd.md --profile review-table --image-mode relative --acceptance-detail concise
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/prd-create-skill/scripts/validate_markdown.py" path/to/prd.md --profile review-table --outline five-section --image-mode relative --acceptance-detail none
 ```
 
 Do not declare completion while any validation error remains.

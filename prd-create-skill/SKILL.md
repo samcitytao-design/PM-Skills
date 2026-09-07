@@ -7,11 +7,17 @@ description: Use when a user provides prototype images, UI screenshots, wirefram
 
 ## Purpose
 
-Turn prototype evidence into one complete, maintainable Markdown PRD. Separate what is visible, what the user stated, and what is inferred; confirm both product decisions and the intended document format before formal drafting.
+Turn prototype evidence into one complete, maintainable Markdown PRD. Separate what is visible, what the user stated, and what is inferred; resolve product decisions and the output contract before formal drafting; reuse already-approved choices.
 
 This skill is domain-neutral. It does not assume an industry, platform, account model, backend, payment system, fixed canvas, or implementation architecture.
 
 This skill begins after prototype images already exist. It may inventory, classify, and reference those images, but it never creates, regenerates, redesigns, or resizes them. Do not invoke a prototype-generation workflow from this skill.
+
+## Format Contract First
+
+Resolve the output contract before drafting or revising. The authoritative five-module default, precedence, table structure, and concise writing recipe are in [references/markdown-template.md](references/markdown-template.md). This user's standing format is already approved; a later explicit request overrides it.
+
+Treat module selection, table columns, and wording as separate dimensions. A request to change modules or make the content “分层分点 / 精简” does not authorize removing tables. Preserve the existing table skeleton and revise its right cells. Read a supplied reference before claiming to follow it; distinguish reusable structure from its example product rules. If a consequential structural choice is genuinely ambiguous, ask one short question before that change, not after producing a replacement document.
 
 ## Output Boundary
 
@@ -73,7 +79,7 @@ Record the signal and activated module. Absence of a signal means the module sta
 
 ### 5. Produce The Scan Report
 
-Before the final PRD, present:
+For new unresolved scope, present a concise scan covering:
 
 1. input evidence and page coverage
 2. confirmed product logic
@@ -83,13 +89,13 @@ Before the final PRD, present:
 6. proposed test-point and variant grouping when applicable
 7. expected final PRD coverage
 
-Follow [references/clarification-gate.md](references/clarification-gate.md).
+Keep resolved details internal during a revision; report only the changed or unresolved part. Follow [references/clarification-gate.md](references/clarification-gate.md).
 
 ### 6. Present One Pre-Draft Confirmation Pack
 
 A decision is blocking when different answers change scope, user outcome, page/state behavior, permissions, workflow, key data meaning, dependency behavior, recovery, acceptance results, or the expected PRD artifact.
 
-Before drafting, present one consolidated confirmation pack containing:
+When decisions or a new format remain unresolved, present one consolidated confirmation pack containing only the applicable unresolved portions of:
 
 1. proposed page/test-point/variant map
 2. all product and interaction decisions currently discoverable
@@ -100,7 +106,7 @@ Before drafting, present one consolidated confirmation pack containing:
 
 For each unresolved blocking decision, give 2-3 mutually exclusive options, impacts, and one recommendation with rationale. Batch all currently known questions by default so the user can answer once. Ask one at a time only when the user requests an interview-style process.
 
-The user must approve both the product decisions and the template preview. One explicit reply may approve the entire pack. If the reply changes product behavior or format, revise only the affected portion and reconfirm it.
+Product decisions require approval or explicit delegation. Format is resolved by the latest explicit request, an approved reference/template, or the standing default; do not ask the user to approve it again. Preview only a genuinely new proposed structure. If an instruction is ambiguous about a structural change, clarify the affected part before rewriting. One reply may resolve the entire pack.
 
 **Never generate the formal PRD while a blocking decision or document-format decision is unresolved.** Do not select a temporary answer and move the conflict to a final pending-questions section. User silence is not approval.
 
@@ -111,15 +117,15 @@ After the complete confirmation pack is approved or explicitly delegated:
 1. build the structured content in [references/prd-content-schema.md](references/prd-content-schema.md)
 2. render it with the approved profile from [references/markdown-template.md](references/markdown-template.md)
 3. use the approved image-reference mode; never emit an absolute local filesystem path
-4. record confirmed decisions, including delegated recommendations
-5. put accepted non-blocking ideas under `后续优化`, outside current acceptance
+4. retain confirmed decisions, including delegated recommendations, in the working model; render a decision chapter only if the output contract includes it
+5. include accepted future ideas only if that section was requested; do not add it to the default five modules
 
 Use the review-table profile by default when work is organized around test points, experiment variants, placement options, or alternative styles. In that profile:
 
 - each test point or page requirement owns one table
 - every visual variant under the same test point is a separate row in that table
-- confirm `row_complete` or `shared_below` logic placement in the template preview
-- use `row_complete` when each prototype or page state is reviewed as an implementation unit: every row must contain all applicable conditions, display rules, interactions, business/lifecycle rules, fallback, exact UI copy, and acceptance needed to understand and test that state without another section
+- use the resolved logic placement; the standing five-module format uses `row_complete`; preview only a proposed change
+- use `row_complete` when each prototype or page state is reviewed as an implementation unit: every row must contain all applicable conditions, display rules, interactions, business/lifecycle rules, fallback, exact UI copy, and observable outcomes needed to understand and test that state without another section; a separate acceptance block is optional, not a reason to repeat every rule
 - use `shared_below` only when the user approves a compact comparison whose rows contain deltas and whose common logic is intentionally read once below the table
 - never split one page state's display, interaction, fallback, UI copy, or acceptance into parallel subsections outside its row when `row_complete` is selected; repeating genuinely shared logic is intentional in this mode
 - the right cell follows [references/review-table-template.md](references/review-table-template.md), omitting irrelevant slots
@@ -131,7 +137,7 @@ Treat the approved section outline as an output contract. Do not restore a remov
 
 When the PRD narrative and interface copy use different languages, keep explanations in the approved document language and record each exact interface string in the applicable row beside its element, state, and display condition. Do not translate or paraphrase confirmed UI copy.
 
-Use the full-spec profile for products better represented as independent pages, flows, states, and recovery paths.
+Use full-spec or shared-below only when explicitly selected by the user or an approved reference; do not switch away from an existing table layout merely because the task has flows or asks for hierarchy.
 
 Maintain the same Markdown file for later logic changes; do not create competing copies unless the user requests version snapshots.
 
@@ -140,7 +146,7 @@ Maintain the same Markdown file for later logic changes; do not create competing
 Run [references/validation-checklist.md](references/validation-checklist.md). Use the confirmed profile and image mode, for example:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/prd-create-skill/scripts/validate_markdown.py" path/to/prd.md --profile review-table --image-mode relative --acceptance-detail concise
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/prd-create-skill/scripts/validate_markdown.py" path/to/prd.md --profile review-table --outline five-section --image-mode relative --acceptance-detail none
 ```
 
 If a structured JSON model is used, generate with:
@@ -169,7 +175,7 @@ The task is incomplete if any of these are true:
 
 - a direct-image map was not confirmed
 - a blocking product or document-format decision remains unresolved
-- the template preview was not approved
+- a genuinely new proposed format was used without approval, or a resolved module/table contract was changed without authorization
 - visual inference is presented as confirmed business logic
 - an irrelevant domain module was forced onto the project
 - prototype images cannot be traced to stable source IDs
@@ -188,9 +194,11 @@ The task is incomplete if any of these are true:
 | Direct images | Propose a page/test-point/variant map in the confirmation pack |
 | Material ambiguity | Add it to the consolidated pre-draft confirmation pack |
 | Experiment variants | Use one table per test point and one row per variant |
-| Page/state rows are reviewed independently | Confirm `row_complete`; make every row self-contained and testable |
-| Compact delta comparison is explicitly preferred | Confirm `shared_below`; keep row differences in-table and common logic once below |
-| Document format unknown | Preview the outline and sample table; obtain approval |
+| Page/state rows are reviewed independently | Use resolved `row_complete`; make every row self-contained and testable |
+| Compact delta comparison is explicitly preferred | Use explicitly selected `shared_below`; keep row differences in-table and common logic once below |
+| Format unresolved | Reuse approved defaults; preview only a genuinely new proposal |
+| Modules changed; table not mentioned | Keep table columns and grouping, edit content in right cells |
+| 分层分点 / 精简 | Bold short slot labels + numbered short points inside the existing right cell |
 | Domain signal present | Load only the matching conditional module |
 | User authorizes recommendations | Record each delegated decision |
-| Later logic change | Update the same Markdown and decision record |
+| Later logic change | Update the same Markdown; keep decision bookkeeping internal unless requested |

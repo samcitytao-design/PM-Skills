@@ -276,6 +276,74 @@ def _append_decisions(lines: list[str], decisions: list[dict[str, Any]]) -> None
     lines.append("")
 
 
+def _render_five_section(model: dict[str, Any], image_mode: str, acceptance_detail: str) -> str:
+    """Render the resolved five-module contract without leaking internal bookkeeping."""
+    if model["document_profile"] != "review_table" or model["delivery"].get("logic_placement") != "row_complete":
+        raise ValueError("five_section requires review_table and row_complete")
+    for key in ("actors", "states", "rules", "data", "dependencies", "risks", "measurement", "future"):
+        if model.get(key):
+            raise ValueError(f"five_section: place {key} in the applicable row or approved module before rendering")
+    overview = model["overview"]
+    for key in ("background", "goals"):
+        if not _items(overview.get(key)):
+            raise ValueError(f"five_section requires overview.{key}")
+    for key in overview:
+        if key not in {"background", "goals"} and overview[key]:
+            raise ValueError(f"five_section: place overview.{key} in an approved module")
+    if not _items(model.get("configuration_summary")):
+        raise ValueError("five_section requires an explicit configuration_summary")
+    tracking = model.get("tracking")
+    if not isinstance(tracking, list) or not tracking:
+        raise ValueError("five_section requires explicit tracking items (or a truthful no-new-tracking statement)")
+    points = model.get("test_points")
+    if not isinstance(points, list) or not points:
+        raise ValueError("review_table requires non-empty test_points")
+    lines = [f"# {_text(model['meta']['title'])}", "", "<!-- prd-profile: review-table -->",
+             "<!-- prd-outline: five-section -->", "", "## 1. 需求背景", ""]
+    lines.extend(f"- {item}" for item in _items(overview["background"]))
+    lines.extend(["", "## 2. 需求目标", ""])
+    lines.extend(f"- {item}" for item in _items(overview["goals"]))
+    lines.extend(["", "## 3. 需求详述", ""])
+    if model.get("flows"):
+        lines.extend(["### 整体流程", ""])
+        lines.extend(_render_structured(model["flows"], 4))
+    seen = set()
+    for point in points:
+        if not isinstance(point, dict):
+            raise ValueError("each test point must be an object")
+        point_id = _text(point.get("id"))
+        if point_id in seen:
+            raise ValueError(f"duplicate test point id: {point_id}")
+        seen.add(point_id)
+        point = dict(point)
+        purpose = _text(point.pop("purpose", ""))
+        if purpose:
+            point["shared_rules"] = [purpose, *_items(point.get("shared_rules"))]
+        rendered = _render_test_point(point, image_mode, acceptance_detail, "row_complete")
+        # Only labels change; grouping, images and rule values are preserved.
+        labels = {"| Prototype | Requirement summary |": "| 原型图 | 具体需求逻辑 |",
+                  "**适用条件**": "**展示时机**", "**页面规则**": "**页面展示**",
+                  "**交互流程**": "**交互逻辑**"}
+        for line in rendered:
+            for before, after in labels.items():
+                line = line.replace(before, after)
+            lines.append(line)
+    lines.extend(["## 4. 云控项", ""])
+    lines.extend(f"- {item}" for item in _items(model["configuration_summary"]))
+    lines.extend(["", "## 5. 埋点", ""])
+    if all(isinstance(item, str) for item in tracking):
+        lines.extend(f"- {item}" for item in tracking)
+    else:
+        lines.extend(["| 事件 | 触发时机 | 主要参数 |", "| --- | --- | --- |"])
+        for item in tracking:
+            if not isinstance(item, dict) or not _text(item.get("event")) or not _text(item.get("trigger")):
+                raise ValueError("tracking rows require event and trigger")
+            params = "、".join(_items(item.get("parameters")))
+            lines.append(f"| {_escape_cell(item['event'])} | {_escape_cell(item['trigger'])} | {_escape_cell(params)} |")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def render_prd(model: dict[str, Any]) -> str:
     if "blocking_decisions" not in model or not isinstance(model["blocking_decisions"], list):
         raise ValueError("blocking_decisions must be present as a list")
@@ -314,6 +382,12 @@ def render_prd(model: dict[str, Any]) -> str:
     title = _text(meta.get("title"))
     if not title:
         raise ValueError("meta.title is required")
+
+    outline = _text(delivery.get("outline_profile")) or "legacy"
+    if outline not in {"legacy", "five_section"}:
+        raise ValueError("delivery.outline_profile must be legacy or five_section")
+    if outline == "five_section":
+        return _render_five_section(model, image_mode, acceptance_detail)
 
     marker = "review-table" if profile == "review_table" else "full-spec"
     lines = [f"# {title}", "", f"<!-- prd-profile: {marker} -->", ""]

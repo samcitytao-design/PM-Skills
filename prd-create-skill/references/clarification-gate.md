@@ -2,6 +2,8 @@
 
 ## Scan Report Shape
 
+For initial unresolved scope, use the applicable items below. On revisions, retain resolved facts internally and present only changed or unresolved decisions. The output contract in markdown-template.md determines format; an approved standing format requires no new preview.
+
 1. input mode and evidence summary
 2. confirmed page coverage
 3. confirmed product logic
@@ -42,7 +44,7 @@
 
 ## Consolidated Confirmation Pack
 
-Batch all currently discoverable decisions by default. Cover only applicable topics, but always include document format.
+Batch currently unresolved decisions. Treat explicit instructions, an approved reference and the standing format as resolved; do not re-ask them.
 
 | Block | Confirm when applicable |
 |---|---|
@@ -56,7 +58,7 @@ Batch all currently discoverable decisions by default. Cover only applicable top
 
 For each unresolved blocking row, provide 2-3 mutually exclusive options, concrete impact, and one recommendation. The user may approve all recommendations in one reply.
 
-After the decision table, show the proposed final outline and one representative table populated with actual evidence. Ask whether any section, column, detail level, or wording style should change.
+Only for a genuinely new unresolved format proposal, show the proposed outline and one real row. For explicit edits and the standing format, preserve the table and proceed without asking again.
 
 ## Conversation Rules
 
@@ -65,8 +67,8 @@ After the decision table, show the proposed final outline and one representative
 - Lead with the recommendation, then explain trade-offs.
 - When the user says “use your recommendations,” record each decision as delegated.
 - Do not infer approval from silence, urgency, or a request to “just draft it.”
-- Do not treat product-logic approval as format approval unless the reply clearly covers both.
-- If new evidence reveals a genuinely new blocker after confirmation, ask only the supplemental question and reconfirm the affected template portion.
+- Do not treat product-logic approval as authorization to change table structure. Existing format approval and the standing preference persist.
+- If new evidence reveals a genuinely new blocker, ask only the supplemental question. Reconfirm only an ambiguous or newly proposed format change, not an explicit user edit.
 - Do not publish a formal PRD with temporary decisions or a pending-questions section.
 
 ## Ready-To-Draft Gate
@@ -79,4 +81,4 @@ Formal drafting can start only when:
 - activated modules are recorded
 - expected PRD coverage is agreed
 - document profile, outline, table structure, review-table logic placement, document/UI-copy languages, image mode, acceptance detail, and output target are confirmed
-- the representative template preview is explicitly approved
+- format is resolved by explicit instructions, approved reference/preview, or standing preference; only a genuinely new proposal needs approval
