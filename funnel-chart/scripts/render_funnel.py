@@ -106,9 +106,18 @@ def build(cfg):
     e2e = counts[-1] / counts[0]
     maxloss_i = max(range(1, n), key=lambda i: counts[i - 1] - counts[i])
     last_i = n - 1
-    # 颜色
+    # 颜色：按层数在渐变色带上等距取样，保证首层最暖、末层最冷（4 层和 8 层观感一致）
+    def sample_color(t):
+        ramp = cfg["colors"]
+        if len(ramp) == 1:
+            return tuple(ramp[0])
+        pos = t * (len(ramp) - 1)
+        i0 = min(int(pos), len(ramp) - 2)
+        f = pos - i0
+        return tuple(int(ramp[i0][k] + (ramp[i0 + 1][k] - ramp[i0][k]) * f) for k in range(3))
+
     for i, s in enumerate(stages):
-        s["_color"] = tuple(s.get("color") or cfg["colors"][min(i, len(cfg["colors"]) - 1)])
+        s["_color"] = tuple(s.get("color") or sample_color(i / max(n - 1, 1)))
 
     W = int(cfg["width"])
     MG = 64
