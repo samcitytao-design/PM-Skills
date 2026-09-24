@@ -1,0 +1,3 @@
+# Funnel chart renders (generated output, not source)
+funnel-chart/**/*.png
+__pycache__/
